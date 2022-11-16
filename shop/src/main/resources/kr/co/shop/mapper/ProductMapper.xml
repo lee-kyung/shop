@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybats-3-mapper.dtd">
+  
+  <mapper namespace="kr.co.shop.mapper.ProductMapper">
+  	<select id="pro_write" resultType="kr.co.shop.vo.DaeVO">
+  		select * from dae order by id asc
+  	</select>
+  	
+  	<!-- 대분류에 속하는 중분류만 가져온다 -->
+  	<select id="getjung" resultType="kr.co.shop.vo.JungVO">
+  		select * from jung where daecode=#{param1}
+  	</select>
+  	
+  	<select id="getso" resultType="kr.co.shop.vo.SoVO">
+  		select * from so where daejung=#{param1}
+  	</select>
+  	
+  	<!-- integer로 받기때문에 null값이 존재하면 안된다. -->
+  	<select id="getbunho" resultType="Integer">
+  		select ifnull(substring(max(pcode),8,3), "0") from product 
+  		where pcode like concat(#{param1},'%')
+  	</select>
+  	
+  	<insert id="product_ok" parameterType="kr.co.shop.vo.ProductVO">
+  		insert into product(pcode, pimg, cimg, title, price, made, halin, juk, su, baesong, baeday, writeday)
+  		values (#{pcode}, #{pimg}, #{cimg}, #{title}, #{price}, #{made},#{halin}, #{juk}, #{su}, #{baesong}, #{baeday}, now())
+  	</insert>
+  	
+  	<select id="pro_list" resultType="kr.co.shop.vo.ProductVO">
+  		select *, adddate(curdate(), baeday) as baeday2, 
+  		dayofweek(adddate(curdate(),baeday)) as yoil 
+  		from product where pcode like concat(#{param1}, '%') order by id desc limit 30
+  		<!-- select * from product where pcode like 'p0101%'; -->
+  	</select>
+  	
+  	<select id="pro_content" resultType="kr.co.shop.vo.ProductVO">
+  		select *, adddate(curdate(), baeday) as baeday2, 
+  		dayofweek(adddate(curdate(),baeday)) as yoil 
+  		from product where pcode=#{param1}
+  	</select>
+  	
+  <!-- 어느 회원이 wish를 사용했는지 알기 위해서 작성 -->
+  	<insert id="wish_add">
+  		insert into wish(userid, pcode, writeday) values(#{param1}, #{param2}, now())
+  	</insert>
+  	
+	<insert id="cart_add">
+		insert into cart(userid,pcode,su,writeday)
+		values(#{param1},#{param2},#{param3},now())
+	</insert>
+	
+	<select id="pro_gumae" resultType="kr.co.shop.vo.ProductVO">
+		select * from product where pcode=#{param1}	
+	</select>
+	
+	<select id="getmember" resultType="kr.co.shop.vo.MemberVO">
+		select * from member where userid=#{param1}
+	</select>
+	
+	<select id="getbaesong" resultType="kr.co.shop.vo.BaesongVO">
+		select * from baesong where userid=#{param1} and gibon=1
+	</select>
+	
+	<insert id="bae_chuga" parameterType="kr.co.shop.vo.MemberVO">
+    	insert into baesong(name,zip,juso,juso_etc,phone,userid, gibon)
+   	 	values(#{name},#{zip},#{juso},#{juso_etc},#{phone},#{userid}, 1)
+	</insert>
+ 
+ 	<select id="baesong_list" resultType="kr.co.shop.vo.BaesongVO">
+   	 	select * from baesong where userid=#{param1}
+	</select>
+	
+	<insert id="juso_add_ok" parameterType="kr.co.shop.vo.MemberVO">
+    	insert into baesong(name,zip,juso,juso_etc,phone,userid)
+   	 	values(#{name},#{zip},#{juso},#{juso_etc},#{phone},#{userid})
+	</insert>
+	
+	<select id="baesong_edit" resultType="kr.co.shop.vo.BaesongVO">
+   	 	select * from baesong where id=#{param1}
+	</select>
+	
+	<update id="baesong_edit_ok" parameterType="kr.co.shop.vo.BaesongVO">
+    	update baesong set name=#{name},zip=#{zip},juso=#{juso},juso_etc=#{juso_etc}, phone=#{phone} where id=#{id}
+	</update>
+	
+	<insert id="pro_gumae_ok" parameterType="kr.co.shop.vo.GumaeVO">
+		insert into gumae(jumuncode,pcode,su,userid,bae_id,chong,sudan,bank,card,gigan,phone,writeday,state)
+     	values(#{jumuncode},#{pcode},#{su},#{userid},#{bae_id},#{chong},#{sudan},#{bank},#{card},#{gigan},#{phone},now(),0)
+	</insert>
+	
+	<select id="getjumun" resultType="Integer">
+		select ifnull(max(right(jumuncode,4)),0) from gumae where userid=#{param1}
+	</select>
+	
+	<select id="product_view" resultType="kr.co.shop.vo.ProductViewVO">
+		select g.* , p.pimg, p.title,p.price,
+  		b.name,b.phone as hphone,b.juso,b.juso_etc,b.chuga  
+   		from product as p, baesong as b, gumae as g
+   		where g.pcode=p.pcode and g.bae_id=b.id and jumuncode=#{param1}
+	</select>
+	
+	<select id="checkwish" resultType="Integer">
+		select count(*) from wish where userid=#{param1} and pcode=#{param2};
+	</select>
+	
+	<delete id="wish_cancel">
+    	delete from wish where pcode=#{param1} and userid=#{param2}
+	</delete>
+	
+	<delete id="cart_del">
+		delete from cart where pcode=#{param1} and userid=#{param2}
+	</delete>
+	
+	<select id="getReview" resultType="kr.co.shop.vo.ReviewVO">
+		select *, round((select avg(star) from review where pcode=#{param1})) as avg from review where pcode=#{param1} order by id desc
+	</select>
+	
+	<select id="getEmail" resultType="String">
+		select email from member where userid=#{param1}
+	</select>
+	
+	<select id="getGrp" resultType="Integer">
+		select ifnull(max(grp),0) from question
+	</select>
+	
+	<insert id="qwrite_ok" parameterType="kr.co.shop.vo.QuestionVO">
+		insert into question(pcode,email,ptitle,content,seq,grp,writeday)
+   		values(#{pcode}, #{email},#{ptitle},#{content},#{seq},#{grp},now())
+	</insert>
+	
+	<select id="getQuestion" resultType="kr.co.shop.vo.QuestionVO">
+		select * from question where pcode=#{param1} order by grp desc, seq asc
+	</select>
+	
+  </mapper>

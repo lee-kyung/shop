@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybats-3-mapper.dtd">
+  
+  <mapper namespace="kr.co.shop.mapper.MypageMapper">
+  	
+  	<select id="myinfo" resultType="kr.co.shop.vo.MemberVO">
+  		select * from member where userid=#{param1}
+  	</select>
+  	
+  	<update id="myinfo_edit_ok" parameterType="kr.co.shop.vo.MemberVO">
+  		update member set name=#{name}, zip=#{zip},juso=#{juso},
+  		juso_etc=#{juso_etc}, phone=#{phone},email=#{email} where userid=#{userid}
+  	</update>
+  	
+  	<select id="getPwd" resultType="String">
+  		select pwd from member where userid=#{param1}
+  	</select>
+  	
+  	<update id="change_pwd">
+  		update member set pwd=#{param1} where userid=#{param2}
+  	</update>
+  	
+  	<select id="wish" resultType="kr.co.shop.vo.WishVO">
+  		select p.title, p.pimg, p.price, w.writeday, w.id, w.pcode from product as p, wish as w 
+  		where w.pcode=p.pcode and userid=#{param1}
+  	</select>
+  	
+  	<delete id="wish_del">
+  		delete from wish where id=#{param1}
+  	</delete>
+  	
+  	<insert id="move_cart">
+  		insert into cart(userid, pcode, su, writeday) 
+  		values (#{param1},#{param2},1,now())
+  	</insert>
+  	
+  	<!-- userid와 pcode가 일치하면 삭제  -->
+  	<delete id="wish_del2">
+  		delete from wish where userid=#{param1} and pcode=#{param2}
+  	</delete>
+  	
+  	<select id="cart" resultType="kr.co.shop.vo.CartVO">
+  		select p.title,p.pimg,p.price,c.su,c.id, c.pcode, c.writeday from cart as c , product as p 
+ 		where p.pcode=c.pcode and userid=#{param1}
+  	</select>
+  	
+  	<delete id="cart_del">
+    	delete from cart where id=#{param1} and userid=#{param2}
+	</delete>
+	
+	<select id="myjumun" resultType="kr.co.shop.vo.GumaeVO">
+		select g.* , p.pimg,p.title from gumae as g, product as p 
+    	where userid=#{param1} and g.pcode=p.pcode 
+     	order by jumuncode desc
+	</select>
+	
+	<update id="change_state">
+		update gumae set state=#{param2} where id=#{param1}
+	</update>
+	
+	<insert id="review_ok" parameterType="kr.co.shop.vo.ReviewVO">
+  		insert into review(pcode, star, content, title, userid, gid, writeday) 
+  		values (#{pcode},#{star},#{content}, #{title}, #{userid}, #{gid}, now())
+  	</insert>
+	
+	<update id="gumae_hugi">
+		update gumae set hugi=1 where id=#{param1}
+	</update>
+	
+	<select id="myreview" resultType="kr.co.shop.vo.ReviewVO">
+		select r.*, p.pimg, p.title as ptitle from review as r, product as p where userid=#{param1} and r.pcode=p.pcode
+	</select>					<!-- as ptitle을 작성해야 이름이 바뀐 상태로 vo에 저장됨 -->
+	
+	<delete id="review_del">
+		delete from review where id=#{param1}
+	</delete>
+	
+	<update id="change_hugi">
+		update gumae set hugi=0 where id=#{param1}
+	</update>
+	
+	<select id="review_update" resultType="kr.co.shop.vo.ReviewVO">
+		select * from review where id=#{param1}
+	</select>
+	
+	<update id="review_update_ok" parameterType="kr.co.shop.vo.ReviewVO">
+		update review set star=#{star}, title=#{title}, content=#{content} where id=#{id}
+	</update> 
+	
+	<update id="member_out">
+		update member set state=1 where userid=#{param1}
+	</update>
+  </mapper>
